@@ -1,6 +1,6 @@
 package test.TripleExpression;
 
-import ru.itmo.ctddev.Dovzhik.TripleExpression.*;
+import TripleExpression.*;
 
 import static test.TripleExpression.Util.*;
 

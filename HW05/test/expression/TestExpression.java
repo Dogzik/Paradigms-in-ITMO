@@ -1,6 +1,6 @@
 package test.expression;
 
-import ru.itmo.ctddev.Dovzhik.expression.*;
+import expression.*;
 
 public class TestExpression {
     public static void main(final String[] args) {

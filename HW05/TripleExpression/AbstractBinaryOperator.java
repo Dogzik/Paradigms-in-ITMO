@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.TripleExpression;
+package TripleExpression;
 
 public strictfp abstract class AbstractBinaryOperator implements AnyExpression {
     private final AnyExpression firstOperand;

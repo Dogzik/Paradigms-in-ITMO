@@ -2,7 +2,7 @@ package test.TripleExpression;
 
 import static test.TripleExpression.Util.*;
 
-import ru.itmo.ctddev.Dovzhik.TripleExpression.*;
+import TripleExpression.*;
 
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)

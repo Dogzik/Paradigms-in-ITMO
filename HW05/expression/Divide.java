@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.expression;
+package expression;
 
 public class Divide extends AbstractBinaryOperator {
     public Divide(Expression x, Expression y) {

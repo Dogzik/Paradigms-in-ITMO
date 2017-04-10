@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.TripleExpression;
+package TripleExpression;
 
 public strictfp class Subtract extends AbstractBinaryOperator {
     public Subtract(AnyExpression x, AnyExpression y) {

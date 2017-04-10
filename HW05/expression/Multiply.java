@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.expression;
+package expression;
 
 public class Multiply extends AbstractBinaryOperator {
     public Multiply(Expression x, Expression y) {

@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.TripleExpression;
+package TripleExpression;
 
 public interface AnyExpression extends Expression, DoubleExpression, TripleExpression {
 }

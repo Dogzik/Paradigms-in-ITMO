@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.expression;
+package expression;
 
 public class Subtract extends AbstractBinaryOperator {
     public Subtract(Expression x, Expression y) {

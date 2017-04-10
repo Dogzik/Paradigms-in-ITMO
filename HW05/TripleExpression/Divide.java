@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.TripleExpression;
+package TripleExpression;
 
 public strictfp class Divide extends AbstractBinaryOperator {
     public Divide(AnyExpression x, AnyExpression y) {

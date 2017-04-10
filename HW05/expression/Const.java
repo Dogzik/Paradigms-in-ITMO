@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.expression;
+package expression;
 
 public class Const implements Expression {
     private final int value;

@@ -1,4 +1,4 @@
-package ru.itmo.ctddev.Dovzhik.expression;
+package expression;
 
 public abstract class AbstractBinaryOperator implements Expression {
     private final Expression firstOperand;
