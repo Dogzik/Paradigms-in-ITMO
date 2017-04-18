@@ -1,17 +1,27 @@
 package expression;
 
-public abstract class AbstractBinaryOperator implements Expression {
-    private final Expression firstOperand;
-    private final Expression secondOperand;
+public strictfp abstract class AbstractBinaryOperator implements AnyExpression {
+    private final AnyExpression firstOperand;
+    private final AnyExpression secondOperand;
 
-    public AbstractBinaryOperator(Expression x, Expression y) {
+    public AbstractBinaryOperator(AnyExpression x, AnyExpression y) {
         firstOperand = x;
         secondOperand = y;
     }
 
-    protected abstract int Apply(int x, int y);
+    protected abstract double apply(double x, double y);
+
+    protected abstract int apply(int x, int y);
+
+    public int evaluate(int x, int y, int z) {
+        return apply(firstOperand.evaluate(x, y, z), secondOperand.evaluate(x, y, z));
+    }
+
+    public double evaluate(double x) {
+        return apply(firstOperand.evaluate(x), secondOperand.evaluate(x));
+    }
 
     public int evaluate(int x) {
-        return Apply(firstOperand.evaluate(x), secondOperand.evaluate(x));
+        return apply(firstOperand.evaluate(x), secondOperand.evaluate(x));
     }
 }

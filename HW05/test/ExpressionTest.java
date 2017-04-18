@@ -1,8 +1,8 @@
-package test.TripleExpression;
+package test;
 
-import TripleExpression.*;
+import expression.*;
 
-import static test.TripleExpression.Util.*;
+import static test.Util.*;
 
 
 public class ExpressionTest {

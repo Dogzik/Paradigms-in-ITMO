@@ -1,4 +1,4 @@
-package test.expression;
+package test;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,8 +13,11 @@ public class Util {
     // Utility class
     private Util() {}
 
+    private static int checks;
+
     public static void assertTrue(final String message, final boolean condition) {
         assert condition : message;
+        checks++;
     }
 
     public static void assertEquals(final String message, final int actual, final int expected) {
@@ -71,6 +74,10 @@ public class Util {
         for (int i = -d; i <= d; i++) {
             values.add(c + i);
         }
+    }
+
+    public static int getChecks() {
+        return checks;
     }
 
     public static final class Op<T> {

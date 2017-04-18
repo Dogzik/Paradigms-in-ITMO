@@ -1,8 +1,8 @@
-package test.TripleExpression;
+package test;
 
-import static test.TripleExpression.Util.*;
+import static test.Util.*;
 
-import TripleExpression.*;
+import expression.*;
 
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)

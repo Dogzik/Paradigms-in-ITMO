@@ -1,11 +1,15 @@
 package expression;
 
-public class Divide extends AbstractBinaryOperator {
-    public Divide(Expression x, Expression y) {
+public strictfp class Divide extends AbstractBinaryOperator {
+    public Divide(AnyExpression x, AnyExpression y) {
         super(x, y);
     }
 
-    protected int Apply(int x, int y) {
+    protected double apply(double x, double y) {
+        return x / y;
+    }
+
+    protected int apply(int x, int y) {
         return x / y;
     }
 }
