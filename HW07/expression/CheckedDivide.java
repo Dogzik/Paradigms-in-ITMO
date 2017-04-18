@@ -1,7 +1,7 @@
 package expression;
 
-import expression.exceptions.myEcxeptions.IllegalOperationException;
-import expression.exceptions.myEcxeptions.OverflowException;
+import myEcxeptions.IllegalOperationException;
+import myEcxeptions.OverflowException;
 
 public class CheckedDivide extends AbstractBinaryOperator {
     public CheckedDivide(final TripleExpression x, final TripleExpression y) {

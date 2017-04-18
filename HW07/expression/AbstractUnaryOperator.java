@@ -1,6 +1,6 @@
 package expression;
 
-import expression.exceptions.myEcxeptions.EvaluatingException;
+import myEcxeptions.EvaluatingException;
 
 public abstract class AbstractUnaryOperator implements TripleExpression {
     private final TripleExpression operand;

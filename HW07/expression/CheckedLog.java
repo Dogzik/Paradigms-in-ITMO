@@ -1,6 +1,6 @@
 package expression;
 
-import expression.exceptions.myEcxeptions.IllegalOperationException;
+import myEcxeptions.IllegalOperationException;
 
 public class CheckedLog extends AbstractBinaryOperator {
     public CheckedLog(final TripleExpression x, final TripleExpression y) {
