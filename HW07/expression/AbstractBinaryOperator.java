@@ -1,6 +1,6 @@
 package expression;
 
-import expression.exceptions.myEcxeptions.EvaluatingException;
+import myEcxeptions.EvaluatingException;
 
 public abstract class AbstractBinaryOperator implements TripleExpression {
     private final TripleExpression firstOperand;

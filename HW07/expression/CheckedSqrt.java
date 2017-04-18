@@ -1,6 +1,6 @@
 package expression;
 
-import expression.exceptions.myEcxeptions.IllegalOperationException;
+import myEcxeptions.IllegalOperationException;
 
 /**
  * Created by Лев on 03.04.2017.

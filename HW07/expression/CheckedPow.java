@@ -1,7 +1,7 @@
 package expression;
 
-import expression.exceptions.myEcxeptions.IllegalOperationException;
-import expression.exceptions.myEcxeptions.OverflowException;
+import myEcxeptions.IllegalOperationException;
+import myEcxeptions.OverflowException;
 
 public class CheckedPow extends AbstractBinaryOperator {
     public CheckedPow(final TripleExpression x, final TripleExpression y) {
