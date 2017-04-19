@@ -6,7 +6,14 @@ var MY_CONSTS = {
     "pi": Math.PI,
     "e": Math.E
 }
-var VARIABLES = ["x", "y", "z", "u", "v", "w"];
+var VARIABLES = {
+    "x": 0,
+    "y": 1,
+    "z": 2,
+    "u": 3,
+    "v": 4,
+    "w": 5
+};
 
 var operation = function (action) {
     return function () {
@@ -32,14 +39,13 @@ for (var x in MY_CONSTS) {
 }
 
 var variable = function (name) {
-    var index = VARIABLES.indexOf(name);
     return function () {
-        return arguments[index];
+        return arguments[VARIABLES[name]];
     }
 }
 
-for (var temp = 0; temp < VARIABLES.length; temp++) {
-    this[VARIABLES[temp]] = variable(VARIABLES[temp]);
+for (var temp in VARIABLES) {
+    this[temp] = variable(temp);
 }
 
 var add = operation(function (a, b) {
@@ -98,7 +104,7 @@ var parse = function (s) {
             stack.push(cnst(MY_CONSTS[tokens[i]]));
             continue;
         }
-        if (VARIABLES.indexOf(tokens[i]) !== -1) {
+        if (tokens[i] in VARIABLES) {
             stack.push(variable(tokens[i]));
             continue;
         }
