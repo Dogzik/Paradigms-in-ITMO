@@ -73,15 +73,14 @@ var expression = (function () {
                 f = false;
             }
         });
+        var res = myNew(this.constructor, ops);
         if (f) {
-            return new Const(this.evaluate(0, 0, 0));
+            return new Const(res.evaluate());
         }
         if (this.doSimplify !== undefined) {
             return this.doSimplify.apply(this, ops);
         }
-        var newExpr = Object.create(this.constructor.prototype);
-        this.constructor.apply(newExpr, ops);
-        return newExpr;
+        return res;
     }
 
     function DefineOperation(maker, action, symbol, howToDiff, howToSimplify) {
