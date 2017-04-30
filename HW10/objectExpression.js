@@ -4,7 +4,31 @@
 "use strict"
 
 var expression = (function () {
+    function myNew(constructor, args) {
+        var tmp = Object.create(constructor.prototype);
+        constructor.apply(tmp, args);
+        return tmp;
+    }
+
     var VARIABLES = {"x": 0, "y": 1, "z": 2};
+    var OP = {
+        "+": Add,
+        "-": Subtract,
+        "*": Multiply,
+        "/": Divide,
+        "negate": Negate,
+        "sqrt": Sqrt,
+        "square": Square
+    };
+    var ARGS_CNT = {
+        "+": 2,
+        "-": 2,
+        "*": 2,
+        "/": 2,
+        "negate": 1,
+        "sqrt": 1,
+        "square": 1
+    };
 
     var primitive  = {simplify: function () { return this }};
     function Const(x) {
@@ -15,16 +39,17 @@ var expression = (function () {
     Const.prototype = Object.create(primitive);
     Const.prototype.toString = function () {
         return this.getValue().toString();
-    };
+    }
+    Const.prototype.prefix = Const.prototype.toString;
     Const.prototype.evaluate = function () {
         return this.getValue();
-    };
+    }
     var ZERO = new Const(0);
     var ONE = new Const(1);
     var TWO = new Const(2);
     Const.prototype.diff = function (v) {
         return ZERO;
-    };
+    }
 
     function Variable(s) {
         var ind = VARIABLES[s];
@@ -39,28 +64,32 @@ var expression = (function () {
     Variable.prototype = Object.create(primitive);
     Variable.prototype.toString = function () {
         return this.getName();
-    };
+    }
+    Variable.prototype.prefix = Variable.prototype.toString;
     Variable.prototype.evaluate = function () {
         return arguments[this.getInd()];
-    };
+    }
     Variable.prototype.diff = function (v) {
         return v === this.getName() ? ONE : ZERO;
-    };
+    }
 
     function Operation() {
         var operands = [].slice.call(arguments);
         this.getOperands = function () {
             return operands;
         }
-    };
+    }
     Operation.prototype.toString = function () {
         return this.getOperands().join(" ") + " " + this.getSymbol();
-    };
+    }
+    Operation.prototype.prefix = function () {
+        return "(" +  this.getSymbol() + " " + this.getOperands().map(function (value) { return value.prefix() }).join(" ") + ")";
+    }
     Operation.prototype.evaluate = function () {
         var args = arguments;
         var res = this.getOperands().map(function(value) { return value.evaluate.apply(value, args) });
         return this.getAction().apply(null, res);
-    };
+    }
     Operation.prototype.diff = function (v) {
         var ops = this.getOperands();
         return this.doDiff.apply(this, ops.concat(ops.map(function (value) { return value.diff(v) })));
@@ -87,10 +116,10 @@ var expression = (function () {
         this.constructor = maker;
         this.getAction = function () {
             return action;
-        };
+        }
         this.getSymbol = function () {
             return symbol;
-        };
+        }
         this.doDiff = howToDiff;
         this.doSimplify = howToSimplify;
     }
@@ -98,7 +127,7 @@ var expression = (function () {
 
     function Add() {
         Operation.apply(this, arguments);
-    };
+    }
     Add.prototype = new DefineOperation(
         Add,
         function (a, b) {
@@ -121,7 +150,7 @@ var expression = (function () {
 
     function Subtract() {
         Operation.apply(this, arguments);
-    };
+    }
     Subtract.prototype = new DefineOperation(
         Subtract,
         function (a, b) {
@@ -141,7 +170,7 @@ var expression = (function () {
 
     function Multiply() {
         Operation.apply(this, arguments);
-    };
+    }
     Multiply.prototype = new DefineOperation(
         Multiply,
         function (a, b) {
@@ -170,7 +199,7 @@ var expression = (function () {
 
     function Divide() {
         Operation.apply(this, arguments);
-    };
+    }
     Divide.prototype = new DefineOperation(
         Divide,
         function (a, b) {
@@ -193,7 +222,7 @@ var expression = (function () {
 
     function Negate() {
         Operation.apply(this, arguments);
-    };
+    }
     Negate.prototype = new DefineOperation(
         Negate,
         function (a) {
@@ -207,7 +236,7 @@ var expression = (function () {
 
     function Square() {
         Operation.apply(this, arguments);
-    };
+    }
     Square.prototype = new DefineOperation(
         Square,
         function (a) {
@@ -217,11 +246,11 @@ var expression = (function () {
         function (a, da) {
             return new Multiply(new Multiply(TWO, a), da);
         }
-    );
+    )
 
     function Sqrt() {
         Operation.apply(this, arguments);
-    };
+    }
     Sqrt.prototype = new DefineOperation(
         Sqrt,
         function (a) {
@@ -238,33 +267,13 @@ var expression = (function () {
     function parse (s) {
         var tokens = s.split(/\s/).filter(function (t) { return t.length > 0 });
         var stack = [];
-        var OP = {
-            "+": Add,
-            "-": Subtract,
-            "*": Multiply,
-            "/": Divide,
-            "negate": Negate,
-            "sqrt": Sqrt,
-            "square": Square
-        };
-        var ARGS_CNT = {
-            "+": 2,
-            "-": 2,
-            "*": 2,
-            "/": 2,
-            "negate": 1,
-            "sqrt": 1,
-            "square": 1
-        };
         for (var i = 0; i < tokens.length; i++) {
             if (tokens[i] in VARIABLES) {
                 stack.push(new Variable(tokens[i]));
                 continue;
             }
             if (tokens[i] in OP) {
-                var tmp = Object.create(OP[tokens[i]].prototype);
-                OP[tokens[i]].apply(tmp, stack.splice(-ARGS_CNT[tokens[i]], ARGS_CNT[tokens[i]]));
-                stack.push(tmp);
+                stack.push(myNew(OP[tokens[i]], stack.splice(-ARGS_CNT[tokens[i]], ARGS_CNT[tokens[i]])));
                 continue;
             }
             stack.push(new Const(parseInt(tokens[i])));
