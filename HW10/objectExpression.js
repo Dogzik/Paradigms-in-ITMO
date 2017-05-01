@@ -40,7 +40,6 @@ var expression = (function () {
     Const.prototype.toString = function () {
         return this.getValue().toString();
     }
-    Const.prototype.prefix = Const.prototype.toString;
     Const.prototype.evaluate = function () {
         return this.getValue();
     }
@@ -65,7 +64,6 @@ var expression = (function () {
     Variable.prototype.toString = function () {
         return this.getName();
     }
-    Variable.prototype.prefix = Variable.prototype.toString;
     Variable.prototype.evaluate = function () {
         return arguments[this.getInd()];
     }
@@ -81,9 +79,6 @@ var expression = (function () {
     }
     Operation.prototype.toString = function () {
         return this.getOperands().join(" ") + " " + this.getSymbol();
-    }
-    Operation.prototype.prefix = function () {
-        return "(" +  this.getSymbol() + " " + this.getOperands().map(function (value) { return value.prefix() }).join(" ") + ")";
     }
     Operation.prototype.evaluate = function () {
         var args = arguments;
