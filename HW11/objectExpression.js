@@ -21,18 +21,18 @@ var exceptions = (function () {
         }
         return res;
     }
-    
+
     function MyException(message) {
         this.message = message;
     }
     MyException.prototype = Object.create(Error.prototype);
     MyException.prototype.name = "MyException";
-    
+
     function MakeException(name) {
-        this.__proto__ = MyException.prototype;
         this.name = name;
     }
-    
+    MakeException.prototype = MyException.prototype;
+
     function OddClosingParenthesisException(expr, ind) {
         MyException.call(this, "Odd closing parenthesis at position: " + ind + "\n" + expr + "\n" + pointer(ind, 1));
     }
@@ -57,7 +57,7 @@ var exceptions = (function () {
         MyException.call(this, "Unknown symbol '" + sym + "' at position: " + ind + "\n" + expr + "\n" + pointer(ind, 1));
     }
     UnknownSymbolException.prototype = new MakeException("UnknownSymbolException");
-    
+
     return {
         "pointer": pointer,
         "MyException": MyException,
@@ -107,17 +107,17 @@ var expression = (function () {
     Const.prototype = Object.create(primitive);
     Const.prototype.toString = function () {
         return this.getValue().toString();
-    };
+    }
     Const.prototype.prefix = Const.prototype.toString;
     Const.prototype.evaluate = function () {
         return this.getValue();
-    };
+    }
     var ZERO = new Const(0);
     var ONE = new Const(1);
     var TWO = new Const(2);
     Const.prototype.diff = function (v) {
         return ZERO;
-    };
+    }
 
     function Variable(s) {
         var ind = VARIABLES[s];
@@ -132,24 +132,24 @@ var expression = (function () {
     Variable.prototype = Object.create(primitive);
     Variable.prototype.toString = function () {
         return this.getName();
-    };
+    }
     Variable.prototype.prefix = Variable.prototype.toString;
     Variable.prototype.evaluate = function () {
         return arguments[this.getInd()];
-    };
+    }
     Variable.prototype.diff = function (v) {
         return v === this.getName() ? ONE : ZERO;
-    };
+    }
 
     function Operation() {
         var operands = [].slice.call(arguments);
         this.getOperands = function () {
             return operands;
         }
-    };
+    }
     Operation.prototype.toString = function () {
         return this.getOperands().join(" ") + " " + this.getSymbol();
-    };
+    }
     Operation.prototype.prefix = function () {
         return "(" +  this.getSymbol() + " " + this.getOperands().map(function (value) { return value.prefix() }).join(" ") + ")";
     }
@@ -157,10 +157,10 @@ var expression = (function () {
         var args = arguments;
         var res = this.getOperands().map(function(value) { return value.evaluate.apply(value, args) });
         return this.getAction().apply(null, res);
-    };
+    }
     Operation.prototype.diff = function (v) {
         var ops = this.getOperands();
-        return this.doDiff.apply(this, ops.concat(ops.map(function (value) { return value.diff(v) })));
+        return this._doDiff.apply(this, ops.concat(ops.map(function (value) { return value.diff(v) })));
     }
     Operation.prototype.simplify = function () {
         var ops = this.getOperands().map(function (item) { return item.simplify() });
@@ -170,31 +170,32 @@ var expression = (function () {
                 f = false;
             }
         });
+        var res = myNew(this.constructor, ops);
         if (f) {
-            return new Const(this.evaluate(0, 0, 0));
+            return new Const(res.evaluate());
         }
-        if (this.doSimplify !== undefined) {
-            return this.doSimplify.apply(this, ops);
+        if (this._doSimplify !== undefined) {
+            return this._doSimplify.apply(this, ops);
         }
-        return myNew(this.constructor, ops);
+        return res;
     }
 
     function DefineOperation(maker, action, symbol, howToDiff, howToSimplify) {
         this.constructor = maker;
         this.getAction = function () {
             return action;
-        };
+        }
         this.getSymbol = function () {
             return symbol;
-        };
-        this.doDiff = howToDiff;
-        this.doSimplify = howToSimplify;
+        }
+        this._doDiff = howToDiff;
+        this._doSimplify = howToSimplify;
     }
     DefineOperation.prototype = Operation.prototype;
 
     function Add() {
         Operation.apply(this, arguments);
-    };
+    }
     Add.prototype = new DefineOperation(
         Add,
         function (a, b) {
@@ -217,7 +218,7 @@ var expression = (function () {
 
     function Subtract() {
         Operation.apply(this, arguments);
-    };
+    }
     Subtract.prototype = new DefineOperation(
         Subtract,
         function (a, b) {
@@ -237,7 +238,7 @@ var expression = (function () {
 
     function Multiply() {
         Operation.apply(this, arguments);
-    };
+    }
     Multiply.prototype = new DefineOperation(
         Multiply,
         function (a, b) {
@@ -266,7 +267,7 @@ var expression = (function () {
 
     function Divide() {
         Operation.apply(this, arguments);
-    };
+    }
     Divide.prototype = new DefineOperation(
         Divide,
         function (a, b) {
@@ -289,7 +290,7 @@ var expression = (function () {
 
     function Negate() {
         Operation.apply(this, arguments);
-    };
+    }
     Negate.prototype = new DefineOperation(
         Negate,
         function (a) {
@@ -303,7 +304,7 @@ var expression = (function () {
 
     function Square() {
         Operation.apply(this, arguments);
-    };
+    }
     Square.prototype = new DefineOperation(
         Square,
         function (a) {
@@ -313,11 +314,11 @@ var expression = (function () {
         function (a, da) {
             return new Multiply(new Multiply(TWO, a), da);
         }
-    );
+    )
 
     function Sqrt() {
         Operation.apply(this, arguments);
-    };
+    }
     Sqrt.prototype = new DefineOperation(
         Sqrt,
         function (a) {
@@ -347,7 +348,7 @@ var expression = (function () {
         }
         return stack.pop();
     }
-    
+
     function parsePrefix(expr) {
         var ind = 0;
         function skipWhiteSpace() {
@@ -400,7 +401,6 @@ var expression = (function () {
                 return res;
             }
 
-
             var curNumber = getNumber();
             if (curNumber !== "" && curNumber !== "-") {
                 return new Const(parseInt(curNumber));
@@ -428,7 +428,7 @@ var expression = (function () {
                     try {
                         operands.push(getExpression());
                     } catch (e) {
-                        if (e.name == "MyException") {
+                        if (e.name === "MyException") {
                             throw new MissingOperandException(expr, curOp, curInd);
                         }
                         throw e;
@@ -467,4 +467,3 @@ var expression = (function () {
 })();
 
 importPackage(expression);
-
