@@ -87,7 +87,7 @@ var expression = (function () {
     }
     Operation.prototype.diff = function (v) {
         var ops = this.getOperands();
-        return this.doDiff.apply(this, ops.concat(ops.map(function (value) { return value.diff(v) })));
+        return this._doDiff.apply(this, ops.concat(ops.map(function (value) { return value.diff(v) })));
     }
     Operation.prototype.simplify = function () {
         var ops = this.getOperands().map(function (item) { return item.simplify() });
@@ -101,8 +101,8 @@ var expression = (function () {
         if (f) {
             return new Const(res.evaluate());
         }
-        if (this.doSimplify !== undefined) {
-            return this.doSimplify.apply(this, ops);
+        if (this._doSimplify !== undefined) {
+            return this._doSimplify.apply(this, ops);
         }
         return res;
     }
@@ -115,8 +115,8 @@ var expression = (function () {
         this.getSymbol = function () {
             return symbol;
         }
-        this.doDiff = howToDiff;
-        this.doSimplify = howToSimplify;
+        this._doDiff = howToDiff;
+        this._doSimplify = howToSimplify;
     }
     DefineOperation.prototype = Operation.prototype;
 
