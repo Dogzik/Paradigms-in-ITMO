@@ -3,6 +3,12 @@
  */
 "use strict"
 
+function importPackage(pack) {
+    for (var x in pack) {
+        global[x] = pack[x];
+    }
+}
+
 var expression = (function () {
     function myNew(constructor, args) {
         var tmp = Object.create(constructor.prototype);
@@ -11,24 +17,6 @@ var expression = (function () {
     }
 
     var VARIABLES = {"x": 0, "y": 1, "z": 2};
-    var OP = {
-        "+": Add,
-        "-": Subtract,
-        "*": Multiply,
-        "/": Divide,
-        "negate": Negate,
-        "sqrt": Sqrt,
-        "square": Square
-    };
-    var ARGS_CNT = {
-        "+": 2,
-        "-": 2,
-        "*": 2,
-        "/": 2,
-        "negate": 1,
-        "sqrt": 1,
-        "square": 1
-    };
 
     var primitive  = {simplify: function () { return this }};
     function Const(x) {
@@ -49,6 +37,13 @@ var expression = (function () {
     Const.prototype.diff = function (v) {
         return ZERO;
     }
+    function isZero(a) {
+        return ((a instanceof Const) && (a.getValue() === 0));
+    }
+    function isOne(a) {
+        return ((a instanceof Const) && (a.getValue() === 1));
+    }
+
 
     function Variable(s) {
         var ind = VARIABLES[s];
@@ -83,7 +78,7 @@ var expression = (function () {
     Operation.prototype.evaluate = function () {
         var args = arguments;
         var res = this.getOperands().map(function(value) { return value.evaluate.apply(value, args) });
-        return this.getAction().apply(null, res);
+        return this._action.apply(null, res);
     }
     Operation.prototype.diff = function (v) {
         var ops = this.getOperands();
@@ -109,9 +104,7 @@ var expression = (function () {
 
     function DefineOperation(maker, action, symbol, howToDiff, howToSimplify) {
         this.constructor = maker;
-        this.getAction = function () {
-            return action;
-        }
+        this._action = action;
         this.getSymbol = function () {
             return symbol;
         }
@@ -120,11 +113,16 @@ var expression = (function () {
     }
     DefineOperation.prototype = Operation.prototype;
 
-    function Add() {
-        Operation.apply(this, arguments);
+    function operationFactory(action, symbol, howToDiff, howToSimplify) {
+        var result = function () {
+            var args = arguments;
+            Operation.apply(this, args);
+        }
+        result.prototype = new DefineOperation(result, action, symbol, howToDiff, howToSimplify);
+        return result;
     }
-    Add.prototype = new DefineOperation(
-        Add,
+
+    var Add = operationFactory(
         function (a, b) {
             return a + b;
         },
@@ -133,21 +131,17 @@ var expression = (function () {
             return new Add(da, db);
         },
         function (a, b) {
-            if ((a instanceof Const) && (a.getValue() === 0)) {
+            if (isZero(a)) {
                 return b;
             }
-            if ((b instanceof Const) && (b.getValue() === 0)) {
+            if (isZero(b)) {
                 return a;
             }
             return new Add(a, b);
         }
     );
 
-    function Subtract() {
-        Operation.apply(this, arguments);
-    }
-    Subtract.prototype = new DefineOperation(
-        Subtract,
+    var Subtract = operationFactory(
         function (a, b) {
             return a - b;
         },
@@ -156,18 +150,14 @@ var expression = (function () {
             return new Subtract(da, db);
         },
         function (a, b) {
-            if ((b instanceof  Const) && (b.getValue() === 0)) {
+            if (isZero(b)) {
                 return a;
             }
             return new Subtract(a, b);
         }
     );
 
-    function Multiply() {
-        Operation.apply(this, arguments);
-    }
-    Multiply.prototype = new DefineOperation(
-        Multiply,
+    var Multiply = operationFactory(
         function (a, b) {
             return a * b;
         },
@@ -176,27 +166,23 @@ var expression = (function () {
             return new Add(new Multiply(da, b), new Multiply(a, db));
         },
         function (a, b) {
-            if ((a instanceof Const) && (a.getValue() === 0)) {
+            if (isZero(a)) {
                 return ZERO;
             }
-            if ((b instanceof Const) && (b.getValue() === 0)) {
+            if (isZero(b)) {
                 return ZERO;
             }
-            if ((a instanceof Const) && (a.getValue() === 1)) {
+            if (isOne(a)) {
                 return b;
             }
-            if ((b instanceof  Const) && (b.getValue() === 1)) {
+            if (isOne(b)) {
                 return a;
             }
             return new Multiply(a, b);
         }
     );
 
-    function Divide() {
-        Operation.apply(this, arguments);
-    }
-    Divide.prototype = new DefineOperation(
-        Divide,
+    var Divide = operationFactory(
         function (a, b) {
             return a / b;
         },
@@ -205,21 +191,17 @@ var expression = (function () {
             return new Divide(new Subtract(new Multiply(da, b), new Multiply(a, db)), new Multiply(b, b));
         },
         function (a, b) {
-            if ((a instanceof Const) && (a.getValue() === 0)) {
+            if (isZero(a)) {
                 return ZERO;
             }
-            if ((b instanceof  Const) && (b.getValue() === 1)) {
+            if (isOne(b)) {
                 return a;
             }
             return new Divide(a, b);
         }
     );
 
-    function Negate() {
-        Operation.apply(this, arguments);
-    }
-    Negate.prototype = new DefineOperation(
-        Negate,
+    var Negate = operationFactory(
         function (a) {
             return -a;
         },
@@ -229,11 +211,7 @@ var expression = (function () {
         }
     );
 
-    function Square() {
-        Operation.apply(this, arguments);
-    }
-    Square.prototype = new DefineOperation(
-        Square,
+    var Square = operationFactory(
         function (a) {
             return a * a;
         },
@@ -241,13 +219,9 @@ var expression = (function () {
         function (a, da) {
             return new Multiply(new Multiply(TWO, a), da);
         }
-    )
+    );
 
-    function Sqrt() {
-        Operation.apply(this, arguments);
-    }
-    Sqrt.prototype = new DefineOperation(
-        Sqrt,
+    var Sqrt = operationFactory(
         function (a) {
             return Math.sqrt(Math.abs(a));
         },
@@ -257,24 +231,42 @@ var expression = (function () {
             var y = new Multiply(TWO, new Sqrt(new Multiply(new Square(a), a)));
             return new Divide(x, y);
         }
-    )
+    );
+
+    var OP = {
+        "+": Add,
+        "-": Subtract,
+        "*": Multiply,
+        "/": Divide,
+        "negate": Negate,
+        "sqrt": Sqrt,
+        "square": Square,
+    };
+    var ARGS_CNT = {
+        "+": 2,
+        "-": 2,
+        "*": 2,
+        "/": 2,
+        "negate": 1,
+        "sqrt": 1,
+        "square": 1,
+    };
 
     function parse (s) {
-        var tokens = s.split(/\s/).filter(function (t) { return t.length > 0 });
         var stack = [];
+        var tokens = s.split(/\s/).filter(function (t) { return t.length > 0 });
         for (var i = 0; i < tokens.length; i++) {
             if (tokens[i] in VARIABLES) {
                 stack.push(new Variable(tokens[i]));
-                continue;
-            }
-            if (tokens[i] in OP) {
+            } else if (tokens[i] in OP) {
                 stack.push(myNew(OP[tokens[i]], stack.splice(-ARGS_CNT[tokens[i]], ARGS_CNT[tokens[i]])));
-                continue;
+            } else {
+                stack.push(new Const(parseInt(tokens[i])));
             }
-            stack.push(new Const(parseInt(tokens[i])));
         }
         return stack.pop();
     }
+
     return {
         "Const": Const,
         "Variable": Variable,
@@ -285,11 +277,8 @@ var expression = (function () {
         "Negate": Negate,
         "Square": Square,
         "Sqrt": Sqrt,
-        "parse": parse
+        "parse": parse,
     }
 })();
 
-// import
-for (var name in expression) {
-    global[name] = expression[name];
-}
+importPackage(expression);
