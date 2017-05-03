@@ -252,7 +252,7 @@ var expression = (function () {
 
     function parse (s) {
         var stack = [];
-        var tokens = s.split(/\s/).filter(function (t) { return t.length > 0 });
+        var tokens = s.trim().split(/\s+/);
         for (var i = 0; i < tokens.length; i++) {
             if (tokens[i] in VARIABLES) {
                 stack.push(new Variable(tokens[i]));
