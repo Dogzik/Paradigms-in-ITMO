@@ -88,9 +88,7 @@ var expression = (function () {
         var ops = this.getOperands().map(function (item) { return item.simplify() });
         var f = true;
         ops.forEach(function (value) {
-            if (!(value instanceof Const)) {
-                f = false;
-            }
+            if (!(value instanceof Const)) { f = false; }
         });
         var res = myNew(this.constructor, ops);
         if (f) {
