@@ -11,7 +11,7 @@ function importPackage(pack) {
 
 var exceptions = (function () {
     function pointer(ind, len) {
-        var res = "";
+        var res = "\n";
         for (var i = 0; i < ind; i++) {
             res += " ";
         }
@@ -22,50 +22,111 @@ var exceptions = (function () {
         return res;
     }
 
-    function MyException(message) {
-        this.message = message;
-    }
-    MyException.prototype = Object.create(Error.prototype);
+    function MyException(message) { this.message = message }
+    MyException.prototype = Error.prototype;
     MyException.prototype.name = "MyException";
 
-    function MakeException(name) {
-        this.name = name;
-    }
+    function MakeException(name) { this.name = name }
     MakeException.prototype = MyException.prototype;
 
-    function OddClosingParenthesisException(expr, ind) {
-        MyException.call(this, "Odd closing parenthesis at position: " + ind + "\n" + expr + "\n" + pointer(ind, 1));
+    function exceptionFactory(name, howToCreateMessage) {
+        var result = function () {
+            var args = arguments;
+            MyException.call(this, howToCreateMessage.apply(null, args));
+        }
+        result.prototype = new MakeException(name);
+        return result;
     }
-    OddClosingParenthesisException.prototype = new MakeException("OddClosingParenthesisException");
 
-    function MissingClosingParenthesisException(expr, ind) {
-        MyException.call(this, "Missing closing parenthesis for opening one at position: " + ind + "\n" + expr + "\n" + pointer(ind, 1));
-    }
-    MissingClosingParenthesisException.prototype = new MakeException("MissingClosingParenthesisException");
+    var OddClosingParenthesisException = exceptionFactory(
+        "OddClosingParenthesisException",
+        function (expr, ind) {
+            return ("Odd closing parenthesis at position: " + ind + "\n" + expr + pointer(ind, 1));
+        }
+    );
 
-    function MissingOperandException(expr, op, ind) {
-        MyException.call(this, "Missing operand for operation '" + op + "' at position: " + ind + "\n" + expr + "\n" + pointer(ind, op.length));
-    }
-    MissingOperandException.prototype = new MakeException("MissingOperandException");
+    var OddOpeningParenthesisException = exceptionFactory(
+        "OddOpeningParenthesisException",
+        function (expr, ind) {
+            return ("Odd opening parenthesis at position: " + ind + "\n" + expr + pointer(ind, 1));
+        }
+    );
 
-    function UnknownIdentifierException(expr, id, ind) {
-        MyException.call(this, "Unknown identifier '" + id + "' at position: " + ind + "\n" + expr + "\n" + pointer(ind, id.length));
-    }
-    UnknownIdentifierException.prototype = new MakeException("UnknownIdentifierException");
+    var MissingClosingParenthesisException = exceptionFactory(
+        "MissingClosingParenthesisException",
+        function (expr, ind) {
+            return ("Expected closing parenthesis before position: " + ind + "\n" + expr +  pointer(ind, 1));
+        }
+    );
 
-    function UnknownSymbolException(expr, sym, ind) {
-        MyException.call(this, "Unknown symbol '" + sym + "' at position: " + ind + "\n" + expr + "\n" + pointer(ind, 1));
-    }
-    UnknownSymbolException.prototype = new MakeException("UnknownSymbolException");
+    var MissingOperandException = exceptionFactory(
+        "MissingOperandException",
+        function (expr, op, ind) {
+            return ("Too few operands for operation '" + op + "' at position: " + ind + "\n" + expr + pointer(ind, op.length));
+        }
+    );
+
+    var OddOperandException = exceptionFactory(
+        "OddOperandException",
+        function (expr, op, ind) {
+            return ("Too many operands for operation '" + op + "' at position: " + ind + "\n" + expr + pointer(ind, op.length));
+        }
+    );
+
+    var UnknownIdentifierException = exceptionFactory(
+        "UnknownIdentifierException",
+        function (expr, id, ind) {
+            return ("Unknown identifier '" + id + "' at position: " + ind + "\n" + expr + pointer(ind, id.length));
+        }
+    );
+
+    var UnknownSymbolException = exceptionFactory(
+        "UnknownSymbolException",
+        function (expr, ind) {
+            return ("Unknown symbol '" + expr.charAt(ind) + "' at position: " + ind + "\n" + expr + pointer(ind, 1));
+        }
+    );
+
+    var MissingOperationException = exceptionFactory(
+        "MissingOperationException",
+        function (expr, ind, where) {
+            var reason = "";
+            if (!where) {
+                reason = "Expected operation after opening parenthesis at position ";
+            } else {
+                reason = "Expected operation before closing parenthesis at position ";
+            }
+            return (reason + ind + "\n" + expr + pointer(ind, 1));
+        }
+    );
+
+    var OddSuffixException = exceptionFactory(
+        "OddSuffixException",
+        function (expr, ind) {
+            return ("Unexpected suffix after correct expression at position: " + ind  + "\n" + expr + pointer(ind, expr.length - ind));
+        }
+    );
+
+    var MissingOpeningParenthesisException = exceptionFactory(
+        "MissingOpeningParenthesisException",
+        function (expr, op, ind) {
+            return ("Opening parenthesis expected for operation '" + op + "' at position: " + ind + "\n" + expr + pointer(ind, op.length));
+        }
+    )
 
     return {
         "pointer": pointer,
         "MyException": MyException,
         "OddClosingParenthesisException": OddClosingParenthesisException,
+        "OddOpeningParenthesisException": OddOpeningParenthesisException,
         "MissingClosingParenthesisException": MissingClosingParenthesisException,
         "MissingOperandException": MissingOperandException,
         "UnknownIdentifierException": UnknownIdentifierException,
-        "UnknownSymbolException": UnknownSymbolException
+        "UnknownSymbolException": UnknownSymbolException,
+        "MissingOperationException": MissingOperationException,
+        "OddSuffixException": OddSuffixException,
+        "OddOperandException": OddOperandException,
+        "MissingOpeningParenthesisException": MissingOpeningParenthesisException
     }
 })();
 
@@ -79,73 +140,36 @@ var expression = (function () {
     }
 
     var VARIABLES = {"x": 0, "y": 1, "z": 2};
-    var OP = {
-        "+": Add,
-        "-": Subtract,
-        "*": Multiply,
-        "/": Divide,
-        "negate": Negate,
-        "sqrt": Sqrt,
-        "square": Square
-    };
-    var ARGS_CNT = {
-        "+": 2,
-        "-": 2,
-        "*": 2,
-        "/": 2,
-        "negate": 1,
-        "sqrt": 1,
-        "square": 1
-    };
 
     var primitive  = {simplify: function () { return this }};
     function Const(x) {
-        this.getValue = function () {
-            return x;
-        }
+        this.getValue = function () { return x }
     }
     Const.prototype = Object.create(primitive);
-    Const.prototype.toString = function () {
-        return this.getValue().toString();
-    }
+    Const.prototype.toString = function () { return this.getValue().toString() }
     Const.prototype.prefix = Const.prototype.toString;
-    Const.prototype.evaluate = function () {
-        return this.getValue();
-    }
+    Const.prototype.postfix = Const.prototype.toString;
+    Const.prototype.evaluate = function () { return this.getValue() }
     var ZERO = new Const(0);
     var ONE = new Const(1);
-    var TWO = new Const(2);
-    Const.prototype.diff = function (v) {
-        return ZERO;
-    }
+    Const.prototype.diff = function (v) { return ZERO }
 
     function Variable(s) {
         var ind = VARIABLES[s];
-        this.getName = function () {
-            return s;
-        }
-        this.getInd = function () {
-            return ind;
-        }
+        this.getName = function () { return s }
+        this.getInd = function () { return ind }
     }
 
     Variable.prototype = Object.create(primitive);
-    Variable.prototype.toString = function () {
-        return this.getName();
-    }
+    Variable.prototype.toString = function () { return this.getName() }
     Variable.prototype.prefix = Variable.prototype.toString;
-    Variable.prototype.evaluate = function () {
-        return arguments[this.getInd()];
-    }
-    Variable.prototype.diff = function (v) {
-        return v === this.getName() ? ONE : ZERO;
-    }
+    Variable.prototype.postfix = Variable.prototype.toString;
+    Variable.prototype.evaluate = function () { return arguments[this.getInd()] }
+    Variable.prototype.diff = function (v) { return v === this.getName() ? ONE : ZERO }
 
     function Operation() {
         var operands = [].slice.call(arguments);
-        this.getOperands = function () {
-            return operands;
-        }
+        this.getOperands = function () { return operands }
     }
     Operation.prototype.toString = function () {
         return this.getOperands().join(" ") + " " + this.getSymbol();
@@ -153,265 +177,189 @@ var expression = (function () {
     Operation.prototype.prefix = function () {
         return "(" +  this.getSymbol() + " " + this.getOperands().map(function (value) { return value.prefix() }).join(" ") + ")";
     }
+    Operation.prototype.postfix = function () {
+        return "(" + this.getOperands().map(function (value) { return value.postfix() }).join(" ") + " " + this.getSymbol() + ")";
+    }
     Operation.prototype.evaluate = function () {
         var args = arguments;
         var res = this.getOperands().map(function(value) { return value.evaluate.apply(value, args) });
-        return this.getAction().apply(null, res);
+        return this._action.apply(null, res);
     }
     Operation.prototype.diff = function (v) {
         var ops = this.getOperands();
         return this._doDiff.apply(this, ops.concat(ops.map(function (value) { return value.diff(v) })));
     }
-    Operation.prototype.simplify = function () {
-        var ops = this.getOperands().map(function (item) { return item.simplify() });
-        var f = true;
-        ops.forEach(function (value) {
-            if (!(value instanceof Const)) {
-                f = false;
-            }
-        });
-        var res = myNew(this.constructor, ops);
-        if (f) {
-            return new Const(res.evaluate());
-        }
-        if (this._doSimplify !== undefined) {
-            return this._doSimplify.apply(this, ops);
-        }
-        return res;
-    }
 
-    function DefineOperation(maker, action, symbol, howToDiff, howToSimplify) {
+    function DefineOperation(maker, action, symbol, howToDiff) {
         this.constructor = maker;
-        this.getAction = function () {
-            return action;
-        }
+        this._action = action;
         this.getSymbol = function () {
             return symbol;
         }
         this._doDiff = howToDiff;
-        this._doSimplify = howToSimplify;
     }
     DefineOperation.prototype = Operation.prototype;
 
-    function Add() {
-        Operation.apply(this, arguments);
+    function operationFactory(action, symbol, howToDiff) {
+        var result = function () {
+            var args = arguments;
+            Operation.apply(this, args);
+        }
+        result.prototype = new DefineOperation(result, action, symbol, howToDiff);
+        return result;
     }
-    Add.prototype = new DefineOperation(
-        Add,
-        function (a, b) {
-            return a + b;
-        },
+
+    var Add = operationFactory(
+        function (a, b) { return a + b },
         "+",
-        function (a, b, da, db) {
-            return new Add(da, db);
-        },
-        function (a, b) {
-            if ((a instanceof Const) && (a.getValue() === 0)) {
-                return b;
-            }
-            if ((b instanceof Const) && (b.getValue() === 0)) {
-                return a;
-            }
-            return new Add(a, b);
-        }
+        function (a, b, da, db) { return new Add(da, db) }
     );
 
-    function Subtract() {
-        Operation.apply(this, arguments);
-    }
-    Subtract.prototype = new DefineOperation(
-        Subtract,
-        function (a, b) {
-            return a - b;
-        },
+    var Subtract = operationFactory(
+        function (a, b) { return a - b },
         "-",
-        function (a, b, da, db) {
-            return new Subtract(da, db);
-        },
-        function (a, b) {
-            if ((b instanceof  Const) && (b.getValue() === 0)) {
-                return a;
-            }
-            return new Subtract(a, b);
-        }
+        function (a, b, da, db) { return new Subtract(da, db) }
     );
 
-    function Multiply() {
-        Operation.apply(this, arguments);
-    }
-    Multiply.prototype = new DefineOperation(
-        Multiply,
-        function (a, b) {
-            return a * b;
-        },
+    var Multiply = operationFactory(
+        function (a, b) { return a * b },
         "*",
-        function (a, b, da, db) {
-            return new Add(new Multiply(da, b), new Multiply(a, db));
-        },
-        function (a, b) {
-            if ((a instanceof Const) && (a.getValue() === 0)) {
-                return ZERO;
-            }
-            if ((b instanceof Const) && (b.getValue() === 0)) {
-                return ZERO;
-            }
-            if ((a instanceof Const) && (a.getValue() === 1)) {
-                return b;
-            }
-            if ((b instanceof  Const) && (b.getValue() === 1)) {
-                return a;
-            }
-            return new Multiply(a, b);
-        }
+        function (a, b, da, db) { return new Add(new Multiply(da, b), new Multiply(a, db)) }
     );
 
-    function Divide() {
-        Operation.apply(this, arguments);
-    }
-    Divide.prototype = new DefineOperation(
-        Divide,
-        function (a, b) {
-            return a / b;
-        },
+    var Divide = operationFactory(
+        function (a, b) { return a / b },
         "/",
-        function (a, b, da, db) {
-            return new Divide(new Subtract(new Multiply(da, b), new Multiply(a, db)), new Multiply(b, b));
-        },
-        function (a, b) {
-            if ((a instanceof Const) && (a.getValue() === 0)) {
-                return ZERO;
-            }
-            if ((b instanceof  Const) && (b.getValue() === 1)) {
-                return a;
-            }
-            return new Divide(a, b);
-        }
+        function (a, b, da, db) { return new Divide(new Subtract(new Multiply(da, b), new Multiply(a, db)), new Multiply(b, b)) }
     );
 
-    function Negate() {
-        Operation.apply(this, arguments);
-    }
-    Negate.prototype = new DefineOperation(
-        Negate,
-        function (a) {
-            return -a;
-        },
+    var Negate = operationFactory(
+        function (a) { return -a },
         "negate",
-        function (a, da) {
-            return new Negate(da);
-        }
+        function (a, da) { return new Negate(da) }
     );
 
-    function Square() {
-        Operation.apply(this, arguments);
-    }
-    Square.prototype = new DefineOperation(
-        Square,
-        function (a) {
-            return a * a;
-        },
-        "square",
-        function (a, da) {
-            return new Multiply(new Multiply(TWO, a), da);
-        }
+    var Sin = operationFactory(
+        function (a) { return Math.sin(a) },
+        "sin",
+        function (a, da) { return new Multiply(new Cos(a), da) }
     )
 
-    function Sqrt() {
-        Operation.apply(this, arguments);
-    }
-    Sqrt.prototype = new DefineOperation(
-        Sqrt,
-        function (a) {
-            return Math.sqrt(Math.abs(a));
-        },
-        "sqrt",
-        function (a, da) {
-            var x = new Multiply(a, da);
-            var y = new Multiply(TWO, new Sqrt(new Multiply(new Square(a), a)));
-            return new Divide(x, y);
-        }
+    var Cos = operationFactory(
+        function (a) { return Math.cos(a) },
+        "cos",
+        function (a, da) { return new Multiply(new Negate(new Sin(a)), da) }
     )
 
-    function parse (s) {
-        var tokens = s.split(/\s/).filter(function (t) { return t.length > 0 });
-        var stack = [];
-        for (var i = 0; i < tokens.length; i++) {
-            if (tokens[i] in VARIABLES) {
-                stack.push(new Variable(tokens[i]));
-                continue;
-            }
-            if (tokens[i] in OP) {
-                stack.push(myNew(OP[tokens[i]], stack.splice(-ARGS_CNT[tokens[i]], ARGS_CNT[tokens[i]])));
-                continue;
-            }
-            stack.push(new Const(parseInt(tokens[i])));
+    var OP = {
+        "+": Add,
+        "-": Subtract,
+        "*": Multiply,
+        "/": Divide,
+        "negate": Negate,
+        "cos": Cos,
+        "sin": Sin
+    };
+    var ARGS_CNT = {
+        "+": 2,
+        "-": 2,
+        "*": 2,
+        "/": 2,
+        "negate": 1,
+        "cos": 1,
+        "sin": 1
+    };
+
+    var expr = "";
+    var ind = 0;
+
+    function skipWhiteSpace() {
+        while (ind < expr.length && /\s/.test(expr.charAt(ind))) {
+            ind++;
         }
-        return stack.pop();
+    }
+    function getNumber() {
+        var res = "";
+        if (expr.charAt(ind) === "-") {
+            res += "-";
+            ind++;
+        }
+        while (ind < expr.length && /\d/.test(expr.charAt(ind))) {
+            res += expr.charAt(ind++);
+        }
+        return res;
+    }
+    function checkPrev(prev, index, id) {
+        if ((id in OP) && (prev !== "(")) {
+            throw new MissingOpeningParenthesisException(expr, id, index);
+        }
+        if (!(id in OP) && (prev === "(")) {
+            throw new MissingOperationException(expr, index, 0);
+        }
+    }
+    function checkEmpty() {
+        if (ind === expr.length) {
+            throw new MyException("Empty input");
+        }
+    }
+    function getIdentifier() {
+        if (!(/[A-Za-z]/.test(expr.charAt(ind)))) {
+            throw new UnknownSymbolException(expr, ind);
+        }
+        var res = "";
+        while (ind < expr.length && /\w/.test(expr.charAt(ind))) {
+            res += expr.charAt(ind++);
+        }
+        return res;
+    }
+    function tryNumber() {
+        var curNumber = getNumber();
+        if (curNumber !== "" && curNumber !== "-") {
+            return new Const(parseInt(curNumber));
+        }
+        if (curNumber === "-") {
+            ind--;
+        }
+        return undefined;
     }
 
-    function parsePrefix(expr) {
-        var ind = 0;
-        function skipWhiteSpace() {
-            while (ind < expr.length && /\s/.test(expr.charAt(ind))) {
-                ind++;
-            }
-        }
-        function getNumber() {
-            var res = "";
-            if (expr.charAt(ind) === "-") {
-                res += "-";
-                ind++;
-            }
-            while (ind < expr.length && /[0-9]/.test(expr.charAt(ind))) {
-                res += expr.charAt(ind++);
-            }
-            return res;
-        }
-        function getIdentifier() {
-            if (!(/[A-Za-z]/.test(expr.charAt(ind)))) {
-                throw new UnknownSymbolException(expr, ind);
-            }
-            var res = "";
-            while (ind < expr.length && /[A-Za-z0-9_]/.test(expr.charAt(ind))) {
-                res += expr.charAt(ind++);
-            }
-            return res;
-        }
-
-        function getExpression() {
+    function parsePrefix(s) {
+        expr = s;
+        ind = 0;
+        function getExpression(prev) {
             skipWhiteSpace();
-            if (ind === expr.length) {
-                throw new MyException("Bad expression\n" + expr);
-            }
-
+            checkEmpty();
             if (expr.charAt(ind) === ')') {
                 throw new OddClosingParenthesisException(expr, ind);
             }
-
             var curInd = ind;
-
             if (expr.charAt(curInd) === '(') {
                 ind++;
-                var res = getExpression();
+                try {
+                    var res = getExpression('(');
+                } catch (e) {
+                    if (e.name === "MyException") {
+                        throw new OddOpeningParenthesisException(expr, curInd);
+                    } else if (e.name === "OddClosingParenthesisException") {
+                        throw new MissingOperationException(expr, ind, 0);
+                    } else {
+                        throw e;
+                    }
+                }
                 skipWhiteSpace();
                 if (expr.charAt(ind) !== ')') {
-                    throw new MissingClosingParenthesisException(expr, curInd);
+                    throw new MissingClosingParenthesisException(expr, ind);
                 }
                 ind++;
                 return res;
             }
-
-            var curNumber = getNumber();
-            if (curNumber !== "" && curNumber !== "-") {
-                return new Const(parseInt(curNumber));
+            var curNumber = tryNumber(prev);
+            if (curNumber !== undefined) {
+                checkPrev(prev, curInd);
+                return curNumber;
             }
-            if (curNumber === "-") {
-                ind--;
-            }
-
-            var curOp = "";
+            var curOp = undefined;
             var curId;
-
             if (expr.charAt(curInd) in OP) {
                 curOp = expr.charAt(curInd);
                 ind++;
@@ -421,36 +369,141 @@ var expression = (function () {
                     curOp = curId;
                 }
             }
-
-            if (curOp !== "") {
+            if (curOp !== undefined) {
+                checkPrev(prev, curInd, curOp);
                 var operands = [];
                 for (var i = 0; i < ARGS_CNT[curOp]; i++) {
                     try {
-                        operands.push(getExpression());
+                        operands.push(getExpression(""));
                     } catch (e) {
-                        if (e.name === "MyException") {
+                        if (e.name === "MyException" || e.name === "OddClosingParenthesisException") {
                             throw new MissingOperandException(expr, curOp, curInd);
                         }
                         throw e;
                     }
                 }
-                return myNew(OP[curOp], operands);
+                var tempInd = ind;
+                try {
+                    getExpression("operand");
+                } catch (e) {
+                    ind = tempInd;
+                    return myNew(OP[curOp], operands);
+                }
+                throw new OddOperandException(expr, curOp, curInd);
             }
-
             if (curId in VARIABLES) {
+                checkPrev(prev, curInd);
                 return new Variable(curId);
             }
-
             throw new UnknownIdentifierException(expr, curId, curInd);
         }
 
-        var ans = getExpression();
+        var ans = getExpression("");
         skipWhiteSpace();
         if (ind !== expr.length) {
-            throw new MyException("Odd suffix after correct expression at position: " + ind  + "\n" + expr + "\n" + pointer(ind, expr.length - ind));
+            throw new OddSuffixException(expr, ind);
         }
         return ans;
     }
+
+    function parsePostfix(s) {
+        var stack = [];
+        expr = s;
+        ind = 0;
+        var balance = 0;
+        var sufInd = 0;
+        skipWhiteSpace();
+        checkEmpty();
+        var prev = "";
+        while (true) {
+            skipWhiteSpace();
+            if (ind === expr.length) {
+                break;
+            }
+            if (expr.charAt(ind) === "(") {
+                stack.push("(");
+                prev = "(";
+                balance++;
+                ind++;
+                continue;
+            }
+            if (expr.charAt(ind) === ")") {
+                if (stack.pop() !== "(") {
+                    throw new OddClosingParenthesisException(expr, ind);
+                }
+                if (!(prev in OP)) {
+                    throw new MissingOperationException(expr, ind, 1);
+                }
+                ind++;
+                balance--;
+                prev = "operand";
+                continue;
+            }
+            var curNumber = tryNumber();
+            if (curNumber !== undefined) {
+                stack.push(curNumber);
+                prev = "operand";
+                continue;
+            }
+            var curInd = ind;
+            var curOp = undefined;
+            var curId;
+            if (expr.charAt(curInd) in OP) {
+                curOp = expr.charAt(curInd);
+                ind++;
+            } else {
+                curId = getIdentifier();
+                if (curId in OP) {
+                    curOp = curId;
+                }
+            }
+            if (curOp !== undefined) {
+                var operands = [];
+                var n = ARGS_CNT[curOp];
+                for (var i = 0; i < n; i++) {
+                    var tmp = stack.pop();
+                    if (tmp === "(" || tmp === undefined) {
+                        throw new MissingOperandException(expr, curOp, curInd);
+                    }
+                    operands[n - i - 1] = tmp;
+                }
+                tmp = stack.pop();
+                if (tmp !== "(") {
+                    if (tmp !== undefined) {
+                        throw new OddOperandException(expr, curOp, curInd);
+                    }
+                    throw new MissingOpeningParenthesisException(expr, curOp, curInd);
+                }
+                skipWhiteSpace();
+                if (expr.charAt(ind) !== ")") {
+                    throw new MissingClosingParenthesisException(expr, ind);
+                }
+                stack.push(myNew(OP[curOp],operands));
+                prev = "operand";
+                ind++;
+                balance--;
+                if (balance == 0) {
+                    sufInd = ind;
+                }
+                continue;
+            }
+            if (curId in VARIABLES) {
+                stack.push(new Variable(curId));
+                prev = "operand";
+                continue;
+            }
+            throw new UnknownIdentifierException(expr, curId, curInd);
+        }
+        if (balance > 0) {
+            throw new MissingClosingParenthesisException(expr, ind);
+        }
+        var res = stack.pop();
+        if (stack.length > 0) {
+            throw new OddSuffixException(expr, sufInd);
+        }
+        return res;
+    }
+
     return {
         "Const": Const,
         "Variable": Variable,
@@ -459,10 +512,10 @@ var expression = (function () {
         "Multiply": Multiply,
         "Divide": Divide,
         "Negate": Negate,
-        "Square": Square,
-        "Sqrt": Sqrt,
-        "parse": parse,
-        "parsePrefix": parsePrefix
+        "Sin": Sin,
+        "Cos": Cos,
+        "parsePrefix": parsePrefix,
+        "parsePostfix": parsePostfix
     }
 })();
 
