@@ -411,6 +411,7 @@ var expression = (function () {
         ind = 0;
         var balance = 0;
         var sufInd = 0;
+        var assigned = false;
         skipWhiteSpace();
         checkEmpty();
         var prev = "";
@@ -442,6 +443,9 @@ var expression = (function () {
             if (curNumber !== undefined) {
                 stack.push(curNumber);
                 prev = "operand";
+                if (sufInd === 0) {
+                    sufInd = ind;
+                }
                 continue;
             }
             var curInd = ind;
@@ -481,14 +485,18 @@ var expression = (function () {
                 prev = "operand";
                 ind++;
                 balance--;
-                if (balance == 0) {
+                if (balance === 0 && !assigned) {
                     sufInd = ind;
+                    assigned = true;
                 }
                 continue;
             }
             if (curId in VARIABLES) {
                 stack.push(new Variable(curId));
                 prev = "operand";
+                if (sufInd === 0) {
+                    sufInd = ind;
+                }
                 continue;
             }
             throw new UnknownIdentifierException(expr, curId, curInd);
@@ -519,3 +527,5 @@ var expression = (function () {
 })();
 
 importPackage(expression);
+
+var e = parsePostfix("x 2 y z");
