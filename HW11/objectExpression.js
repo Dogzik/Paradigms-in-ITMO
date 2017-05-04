@@ -527,5 +527,3 @@ var expression = (function () {
 })();
 
 importPackage(expression);
-
-var e = parsePostfix("x 2 y z");
