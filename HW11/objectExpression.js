@@ -115,7 +115,6 @@ var exceptions = (function () {
     )
 
     return {
-        "pointer": pointer,
         "MyException": MyException,
         "OddClosingParenthesisException": OddClosingParenthesisException,
         "OddOpeningParenthesisException": OddOpeningParenthesisException,
