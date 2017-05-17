@@ -164,10 +164,7 @@ var expression = (function () {
             return new Add(new Multiply(da, b), new Multiply(a, db));
         },
         function (a, b) {
-            if (isZero(a)) {
-                return ZERO;
-            }
-            if (isZero(b)) {
+            if (isZero(a) || isZero(b)) {
                 return ZERO;
             }
             if (isOne(a)) {
