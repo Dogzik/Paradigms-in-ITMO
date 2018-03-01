@@ -77,6 +77,7 @@ public class ArrayDequeModule {
     public static Object dequeue() {
         assert size > 0;
         Object ans = elements[left];
+        elements[left] = null;
         left = add(left);
         size--;
         encuseCapacity(size);
