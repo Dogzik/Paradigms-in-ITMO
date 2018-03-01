@@ -25,7 +25,7 @@ public class ArrayDequeADT {
     // Post: (Result == x - 1 && x > 0) || (Result == elements.length && x == 0)
 
     //Pre: (sz >= 0) && (que != null)
-    private static void encuseCapacity(ArrayDequeADT que, int sz) {
+    private static void ensureCapacity(ArrayDequeADT que, int sz) {
         if ((que.elements.length <= sz) || (sz * 4 < que.elements.length)) {
             Object[] temp = new Object[sz * 2 + 1];
             int ind = 0;
