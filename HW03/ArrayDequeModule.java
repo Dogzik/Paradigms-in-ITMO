@@ -25,7 +25,7 @@ public class ArrayDequeModule {
     // Post: (Result == x - 1 && x > 0) || (Result == elements.length && x == 0)
 
     //Pre: sz >= 0
-    private static void encuseCapacity(int sz) {
+    private static void ensureCapacity(int sz) {
         if ((elements.length <= sz) || (sz * 4 < elements.length)) {
             Object[] temp = new Object[sz * 2 + 1];
             int ind = 0;
