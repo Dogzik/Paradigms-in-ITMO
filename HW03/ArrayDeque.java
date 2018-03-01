@@ -42,7 +42,7 @@ public class ArrayDeque {
     // Pre: (elem != null)
     public void enqueue(Object elem) {
         assert elem != null;
-        encuseCapacity(++size);
+        ensureCapacity(++size);
         elements[right] = elem;
         right = add(right);
     }
@@ -51,7 +51,7 @@ public class ArrayDeque {
     // Pre: (elem != null)
     public void push(Object elem) {
         assert elem != null;
-        encuseCapacity(++size);
+        ensureCapacity(++size);
         left = dec(left);
         elements[left] = elem;
     }
@@ -77,7 +77,7 @@ public class ArrayDeque {
         Object ans = elements[left];
         elements[left] = null;
         left = add(left);
-        encuseCapacity(--size);
+        ensureCapacity(--size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i - 1] == a[i] for i = 1...n - 1) && (Result == a[0])
