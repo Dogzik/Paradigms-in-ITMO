@@ -90,6 +90,7 @@ public class ArrayDequeModule {
         assert size > 0;
         right = dec(right);
         Object ans = elements[right];
+        elements[right] = null;
         ensureCapacity(--size);
         return ans;
     }
