@@ -25,7 +25,7 @@ public class ArrayDeque {
     // Post: (Result == x - 1 && x > 0) || (Result == elements.length && x == 0)
 
     //Pre: sz >= 0
-    private void encuseCapacity(int sz) {
+    private void ensureCapacity(int sz) {
         if ((elements.length <= sz) || (sz * 4 < elements.length)) {
             Object[] temp = new Object[sz * 2 + 1];
             int ind = 0;
@@ -42,7 +42,7 @@ public class ArrayDeque {
     // Pre: (elem != null)
     public void enqueue(Object elem) {
         assert elem != null;
-        encuseCapacity(++size);
+        ensureCapacity(++size);
         elements[right] = elem;
         right = add(right);
     }
@@ -51,7 +51,7 @@ public class ArrayDeque {
     // Pre: (elem != null)
     public void push(Object elem) {
         assert elem != null;
-        encuseCapacity(++size);
+        ensureCapacity(++size);
         left = dec(left);
         elements[left] = elem;
     }
@@ -77,7 +77,7 @@ public class ArrayDeque {
         Object ans = elements[left];
         elements[left] = null;
         left = add(left);
-        encuseCapacity(--size);
+        ensureCapacity(--size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i - 1] == a[i] for i = 1...n - 1) && (Result == a[0])
@@ -87,7 +87,7 @@ public class ArrayDeque {
         assert size > 0;
         right = dec(right);
         Object ans = elements[right];
-        encuseCapacity(--size);
+        ensureCapacity(--size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i] == a[i] for i = 0...n - 2) && (Result == a[n - 1])
@@ -106,7 +106,7 @@ public class ArrayDeque {
 
     // Pre: true
     public void clear() {
-        encuseCapacity(1);
+        ensureCapacity(1);
         size = left = right = 0;
     }
     // Post: n == 0

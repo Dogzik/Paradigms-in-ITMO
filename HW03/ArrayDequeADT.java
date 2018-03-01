@@ -25,7 +25,7 @@ public class ArrayDequeADT {
     // Post: (Result == x - 1 && x > 0) || (Result == elements.length && x == 0)
 
     //Pre: (sz >= 0) && (que != null)
-    private static void encuseCapacity(ArrayDequeADT que, int sz) {
+    private static void ensureCapacity(ArrayDequeADT que, int sz) {
         if ((que.elements.length <= sz) || (sz * 4 < que.elements.length)) {
             Object[] temp = new Object[sz * 2 + 1];
             int ind = 0;
@@ -42,7 +42,7 @@ public class ArrayDequeADT {
     // Pre: (elem != null) && (que != null)
     public static void enqueue(ArrayDequeADT que, Object elem) {
         assert elem != null;
-        encuseCapacity(que, que.size + 1);
+        ensureCapacity(que, que.size + 1);
         que.size++;
         que.elements[que.right] = elem;
         que.right = add(que, que.right);
@@ -52,7 +52,7 @@ public class ArrayDequeADT {
     // Pre: (elem != null) && (que != null)
     public static void push(ArrayDequeADT que, Object elem) {
         assert elem != null;
-        encuseCapacity(que, ++que.size);
+        ensureCapacity(que, ++que.size);
         que.left = dec(que, que.left);
         que.elements[que.left] = elem;
     }
@@ -78,7 +78,7 @@ public class ArrayDequeADT {
         assert que.size > 0;
         Object ans = que.elements[que.left];
         que.left = add(que, que.left);
-        encuseCapacity(que, --que.size);
+        ensureCapacity(que, --que.size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i - 1] == a[i] for i = 1...n - 1) && (Result == a[0])
@@ -88,7 +88,7 @@ public class ArrayDequeADT {
         assert que.size > 0;
         que.right = dec(que, que.right);
         Object ans = que.elements[que.right];
-        encuseCapacity(que, --que.size);
+        ensureCapacity(que, --que.size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i] == a[i] for i = 0...n - 2) && (Result == a[n - 1])
@@ -107,7 +107,7 @@ public class ArrayDequeADT {
 
     // Pre: que != null
     public static void clear(ArrayDequeADT que) {
-        encuseCapacity(que, 1);
+        ensureCapacity(que, 1);
         que.size = que.left = que.right = 0;
     }
     // Post: n == 0
