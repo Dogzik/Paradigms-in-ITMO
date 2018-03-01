@@ -78,7 +78,7 @@ public class ArrayDequeADT {
         assert que.size > 0;
         Object ans = que.elements[que.left];
         que.left = add(que, que.left);
-        encuseCapacity(que, --que.size);
+        ensureCapacity(que, --que.size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i - 1] == a[i] for i = 1...n - 1) && (Result == a[0])
@@ -88,7 +88,7 @@ public class ArrayDequeADT {
         assert que.size > 0;
         que.right = dec(que, que.right);
         Object ans = que.elements[que.right];
-        encuseCapacity(que, --que.size);
+        ensureCapacity(que, --que.size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i] == a[i] for i = 0...n - 2) && (Result == a[n - 1])
@@ -107,7 +107,7 @@ public class ArrayDequeADT {
 
     // Pre: que != null
     public static void clear(ArrayDequeADT que) {
-        encuseCapacity(que, 1);
+        ensureCapacity(que, 1);
         que.size = que.left = que.right = 0;
     }
     // Post: n == 0
