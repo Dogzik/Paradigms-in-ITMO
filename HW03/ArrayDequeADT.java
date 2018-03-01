@@ -42,7 +42,7 @@ public class ArrayDequeADT {
     // Pre: (elem != null) && (que != null)
     public static void enqueue(ArrayDequeADT que, Object elem) {
         assert elem != null;
-        encuseCapacity(que, que.size + 1);
+        ensureCapacity(que, que.size + 1);
         que.size++;
         que.elements[que.right] = elem;
         que.right = add(que, que.right);
@@ -52,7 +52,7 @@ public class ArrayDequeADT {
     // Pre: (elem != null) && (que != null)
     public static void push(ArrayDequeADT que, Object elem) {
         assert elem != null;
-        encuseCapacity(que, ++que.size);
+        ensureCapacity(que, ++que.size);
         que.left = dec(que, que.left);
         que.elements[que.left] = elem;
     }
