@@ -43,7 +43,7 @@ public class ArrayDequeModule {
     public static void enqueue(Object elem) {
         assert elem != null;
         size++;
-        encuseCapacity(size);
+        ensureCapacity(size);
         elements[right] = elem;
         right = add(right);
     }
@@ -52,7 +52,7 @@ public class ArrayDequeModule {
     // Pre: (elem != null)
     public static void push(Object elem) {
         assert elem != null;
-        encuseCapacity(++size);
+        ensureCapacity(++size);
         left = dec(left);
         elements[left] = elem;
     }
