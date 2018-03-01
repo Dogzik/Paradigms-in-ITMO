@@ -80,7 +80,7 @@ public class ArrayDequeModule {
         elements[left] = null;
         left = add(left);
         size--;
-        encuseCapacity(size);
+        ensureCapacity(size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i - 1] == a[i] for i = 1...n - 1) && (Result == a[0])
@@ -90,7 +90,7 @@ public class ArrayDequeModule {
         assert size > 0;
         right = dec(right);
         Object ans = elements[right];
-        encuseCapacity(--size);
+        ensureCapacity(--size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i] == a[i] for i = 0...n - 2) && (Result == a[n - 1])
