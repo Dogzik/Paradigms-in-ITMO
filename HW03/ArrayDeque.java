@@ -87,7 +87,7 @@ public class ArrayDeque {
         assert size > 0;
         right = dec(right);
         Object ans = elements[right];
-        encuseCapacity(--size);
+        ensureCapacity(--size);
         return ans;
     }
     // Post: (n' == n - 1) && (a'[i] == a[i] for i = 0...n - 2) && (Result == a[n - 1])
@@ -106,7 +106,7 @@ public class ArrayDeque {
 
     // Pre: true
     public void clear() {
-        encuseCapacity(1);
+        ensureCapacity(1);
         size = left = right = 0;
     }
     // Post: n == 0
