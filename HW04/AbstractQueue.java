@@ -40,6 +40,15 @@ public abstract class AbstractQueue implements Queue {
         clearImpl();
         size = 0;
     }
+    
+    public Object[] toArray() {
+        Object[] temp = new Object[size()];
+        for (int i = 0; i < size(); i++) {
+            temp[i] = dequeue();
+            enqueue(temp[i]);
+        }
+        return temp;
+    }
 
     protected abstract void clearImpl();
 
